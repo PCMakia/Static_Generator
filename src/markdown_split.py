@@ -1,6 +1,69 @@
 from textnode import TextType,TextNode
 
-def split_nodes_delimiter(old_nodes, delimiter, text_type):
+def split_nodes_delimiter(old_nodes, delimeter, text_type):
+    res = []
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            res.append(node)
+            continue
+        list_word = node.text.split()
+        block = []
+        same = ""
+        for word in list_word:
+            # Single word modifyer
+            if (word[0] == delimeter or word[:2] == delimeter) and (word[-1] == delimeter or word[-2:] == delimeter):
+                if block:
+                    res.append(TextNode(" ".join(block), node.text_type))
+                    block = []
+                if len(delimeter) == 2:
+                    res.append(TextNode(word[2:-2], text_type))
+                elif len(delimeter) == 1:
+                    res.append(TextNode(word[1:-1], text_type))
+            
+            # Check for start of modifier block
+            elif word[0] == delimeter or word[:2] == delimeter:
+                if block:
+                    res.append(TextNode(" ".join(block), node.text_type))
+                    block = []
+                if delimeter == "**":
+                    block.append(word[2:])
+                    same = "**"
+                elif delimeter == "`":
+                    block.append(word[1:])
+                    same = "`"
+                elif delimeter == "_":
+                    block.append(word[1:])
+                    same = "_"
+                
+            # Check for end of modifier block
+            elif word[-1] == delimeter or word[-2:] == delimeter:
+                if same != delimeter:
+                    raise Exception("Nested element is not allowed, for now")
+                if delimeter == "**" and same == delimeter:
+                    block.append(word[:-2])
+                    same = ""
+                elif delimeter == "`" and same == delimeter:
+                    block.append(word[:-1])
+                    same = ""
+                elif delimeter == "_" and same == delimeter:
+                    block.append(word[:-1])
+                    same = ""
+
+                res.append(TextNode(" ".join(block), text_type))
+                block = []
+
+            # Adding middle block or normal text
+            else:
+                block.append(word)
+
+        if same:
+            raise Exception("No closing delimeter found")
+        if block:
+            res.append(TextNode(" ".join(block), node.text_type))   
+        return res
+
+
+def split_nodes_delimiter_old(old_nodes, delimiter, text_type):
     res = []
     for node in old_nodes:
         if node.text_type != TextType.TEXT:
@@ -36,3 +99,4 @@ def find_match(list_word,delimiter,text_type):
         if found > 1: 
             raise Exception("Nested element is not allowed, for now") 
     raise Exception("No closing delimeter found")
+
