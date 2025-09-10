@@ -122,4 +122,8 @@ def split_nodes_link(old_nodes):
 
 
 def text_to_textnodes(text):
+<<<<<<< HEAD
     
+=======
+    pass
+>>>>>>> 760f222 (A10: Adding the function to split link and image from text node)
