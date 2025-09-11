@@ -7,6 +7,10 @@ def split_nodes_delimiter(old_nodes, delimeter, text_type):
         if node.text_type != TextType.TEXT:
             res.append(node)
             continue
+
+        if delimeter not in node.text:
+            res.append(node)
+            continue
         list_word = node.text.split()
         block = []
         same = ""
@@ -61,7 +65,7 @@ def split_nodes_delimiter(old_nodes, delimeter, text_type):
             raise Exception("No closing delimeter found")
         if block:
             res.append(TextNode(" ".join(block), node.text_type))   
-        return res
+    return res
 
 
 def extract_markdown_images(text):
@@ -77,7 +81,9 @@ def split_nodes_image(old_nodes):
             res.append(node)
             continue
         list_image = extract_markdown_images(node.text)
-        
+        if not list_image:
+            res.append(node)
+            continue
         remains = node.text
         for couple in list_image:
             
@@ -93,7 +99,7 @@ def split_nodes_image(old_nodes):
         if remains:
             res.append(TextNode(remains, node.text_type))
         
-        return res
+    return res
 
 def split_nodes_link(old_nodes):
     res = []
@@ -101,10 +107,12 @@ def split_nodes_link(old_nodes):
         if node.text_type != TextType.TEXT:
             res.append(node)
             continue
-        list_image = extract_markdown_links(node.text)
-        
+        list_link = extract_markdown_links(node.text)
+        if not list_link:
+            res.append(node)
+            continue
         remains = node.text
-        for couple in list_image:
+        for couple in list_link:
             
             text, url = couple
             start = remains.find(text)
@@ -118,12 +126,20 @@ def split_nodes_link(old_nodes):
         if remains:
             res.append(TextNode(remains, node.text_type))
         
-        return res
+    return res
 
-
+# could be on oneline but would be hard to track when debug
 def text_to_textnodes(text):
-<<<<<<< HEAD
-    
-=======
-    pass
->>>>>>> 760f222 (A10: Adding the function to split link and image from text node)
+    paragraph = TextNode(text, TextType.TEXT)
+  
+    code = split_nodes_delimiter([paragraph],"`",TextType.CODE)
+
+    italic = split_nodes_delimiter(code,"_",TextType.ITALIC)
+
+    bold = split_nodes_delimiter(italic,"**",TextType.BOLD)
+
+    link = split_nodes_link(bold)
+
+    img = split_nodes_image(link)
+ 
+    return img
